@@ -13,7 +13,7 @@ const AI_URL = process.env.AI_URL || '';
 const AI_KEY = process.env.AI_KEY || '';
 const SYSTEM_PROMPT =
   process.env.SYSTEM_PROMPT ||
-  'You are a professional DeFi portfolio manager. Give practical, risk-aware actions with clear reasoning.';
+  'You are a professional institutional DeFi portfolio manager. Provide precise, risk-aware, execution-ready recommendations with concise rationale.';
 
 function resolveEndpoint() {
   if (AI_PROVIDER === 'openrouter') {
@@ -86,7 +86,18 @@ async function generateStrategy({ context, userRequest }) {
     'Live DeFi context (JSON):',
     JSON.stringify(context, null, 2),
     '',
-    'Return JSON with keys: summary, actions (array of strings), risks (array), opportunities (array), confidence (0-1).',
+    'Return strict JSON with keys:',
+    '- summary: short executive summary',
+    '- actions: array of concrete execution steps (at least 4)',
+    '- risks: array of key portfolio and market risks',
+    '- opportunities: array of high-conviction opportunities',
+    '- confidence: number from 0 to 1',
+    '',
+    'Requirements:',
+    '- Strategy must explicitly reflect riskProfile in context.',
+    '- Use professional language appropriate for a portfolio manager.',
+    '- Include allocation and rebalancing intent in actions.',
+    '- Do not include markdown.',
   ].join('\n');
 
   const body = {

@@ -50,6 +50,7 @@
           <button onclick="switchTab('positions')" id="nav-positions" class="text-sm font-medium text-white tab-trigger">My Positions</button>
           <button onclick="switchTab('explorer')" id="nav-explorer" class="text-sm font-medium text-white/60 hover:text-white tab-trigger">Yield Explorer</button>
           <button onclick="switchTab('jaine')" id="nav-jaine" class="text-sm font-medium text-white/60 hover:text-white tab-trigger">JAINE Pools</button>
+          <button onclick="switchTab('ai')" id="nav-ai" class="text-sm font-medium text-white/60 hover:text-white tab-trigger">AI Copilot</button>
         </nav>
         <div class="flex items-center gap-4">
           <div class="flex flex-col items-end">
@@ -91,7 +92,8 @@
         </div>
       </section>
 
-      <section class="glass rounded-[2rem] p-6 md:p-8 space-y-5">
+      <section id="section-ai" class="space-y-6 tab-section hidden-section">
+      <div class="glass rounded-[2rem] p-6 md:p-8 space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 class="font-display text-2xl font-bold">AI <span class="gradient-text">Agent Strategy</span></h2>
@@ -102,7 +104,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
           <select id="ai-risk-profile" class="glass rounded-xl px-3 py-2 text-sm bg-transparent border border-white/10">
-            <option value="balanced" selected class="bg-[#111]">Balanced</option>
+            <option value="moderate" selected class="bg-[#111]">Moderate</option>
             <option value="conservative" class="bg-[#111]">Conservative</option>
             <option value="aggressive" class="bg-[#111]">Aggressive</option>
           </select>
@@ -128,6 +130,7 @@
           </div>
           <p class="text-xs text-white/40 mt-4" id="ai-meta"></p>
         </div>
+      </div>
       </section>
 
       <section id="section-positions" class="space-y-6 tab-section">
@@ -194,6 +197,7 @@
       <button onclick="switchTab('explorer')" class="flex flex-col items-center gap-1 text-white/40 mobile-nav-item" data-target="explorer"><iconify-icon icon="lucide:droplets" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">Pools</span></button>
       <button id="quick-liquidity-btn" class="relative -top-8 w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center border-4 border-[#050505]"><iconify-icon icon="lucide:plus" class="text-3xl text-white"></iconify-icon></button>
       <button onclick="switchTab('jaine')" class="flex flex-col items-center gap-1 text-white/40 mobile-nav-item" data-target="jaine"><iconify-icon icon="lucide:layers" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">JAINE</span></button>
+      <button onclick="switchTab('ai')" class="flex flex-col items-center gap-1 text-white/40 mobile-nav-item" data-target="ai"><iconify-icon icon="lucide:brain-circuit" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">AI</span></button>
       <button id="wallet-mobile-btn" class="flex flex-col items-center gap-1 text-white/40"><iconify-icon icon="lucide:wallet-minimal" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">Wallet</span></button>
     </nav>
 
@@ -489,7 +493,7 @@
 
     async function generateAiStrategy() {
       const btn = document.getElementById('ai-generate-btn');
-      const riskProfile = document.getElementById('ai-risk-profile').value || 'balanced';
+      const riskProfile = document.getElementById('ai-risk-profile').value || 'moderate';
       const userRequest = document.getElementById('ai-user-request').value?.trim() || 'Build a DeFi strategy for my wallet.';
 
       try {

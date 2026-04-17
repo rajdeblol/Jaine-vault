@@ -36,6 +36,15 @@ function summarizePools(pools) {
   };
 }
 
+function normalizeRiskProfile(input) {
+  const value = String(input || 'moderate').toLowerCase().trim();
+  if (value === 'aggressive') return 'aggressive';
+  if (value === 'conservative') return 'conservative';
+  if (value === 'balanced') return 'moderate';
+  if (value === 'moderate') return 'moderate';
+  return 'moderate';
+}
+
 async function getWalletSnapshot(walletAddress) {
   if (!walletAddress) {
     return {
@@ -86,6 +95,8 @@ function ruleBasedStrategy({ market, jaine, wallet, riskProfile }) {
   const actions = [];
   const risks = [];
   const opportunities = [];
+  let allocationPlan = '';
+  let rebalancePolicy = '';
 
   if (market.bestApyPool) {
     opportunities.push(`Highest APY currently: ${market.bestApyPool.pairName} at ${market.bestApyPool.apyEstimate}%.`);
@@ -95,31 +106,37 @@ function ruleBasedStrategy({ market, jaine, wallet, riskProfile }) {
     risks.push('Overall pool risk profile is elevated. Favor tighter position sizing and shorter rebalance windows.');
   }
 
-  if (wallet.count === 0) {
-    actions.push('Start with a single low-risk stable pair and split capital into 2 staggered entries.');
+  if (riskProfile === 'conservative') {
+    allocationPlan = '70% stable/high-liquidity pools, 20% medium-risk pools, 10% tactical JAINE exposure.';
+    rebalancePolicy = 'Rebalance weekly; hard stop any pool if liquidity drops >20% or volume collapses for 2 consecutive days.';
+  } else if (riskProfile === 'aggressive') {
+    allocationPlan = '35% stable pools, 25% core medium-risk pairs, 40% high-yield tactical positions (including JAINE boosted).';
+    rebalancePolicy = 'Rebalance every 48h; rotate 10-15% capital from bottom decile APY into top quartile adjusted-by-risk pools.';
   } else {
-    actions.push(`You have ${wallet.count} LP positions. Rebalance the bottom 20% APY positions into top quartile pools.`);
+    allocationPlan = '55% stable/high-liquidity pools, 30% medium-risk pools, 15% tactical JAINE boosted positions.';
+    rebalancePolicy = 'Rebalance every 72h; shift up to 8% capital per rebalance cycle based on APY-risk spread.';
   }
 
-  if (riskProfile === 'conservative') {
-    actions.push('Use a max 35% allocation in volatile pairs and keep at least 30% in stable pools.');
-  } else if (riskProfile === 'aggressive') {
-    actions.push('Rotate 10-15% capital weekly into high APY pools with risk score above 55 and monitor drawdowns daily.');
+  if (wallet.count === 0) {
+    actions.push('Open an initial two-leg position plan: one stable pair + one growth pair, each entered in two tranches.');
   } else {
-    actions.push('Apply a barbell strategy: 60% medium risk pools, 40% opportunistic JAINE boosted pools.');
+    actions.push(`Portfolio currently has ${wallet.count} LP positions; migrate the lowest-performing 20% into higher risk-adjusted yield pools.`);
   }
+  actions.push(`Allocation policy (${riskProfile}): ${allocationPlan}`);
+  actions.push(`Execution policy: ${rebalancePolicy}`);
+  actions.push('Set an IL alert threshold at 3.5% and fee recapture check every 24h for active positions.');
 
   if (jaine.bestApyPool) {
     opportunities.push(`JAINE boosted leader: ${jaine.bestApyPool.pairName} at ${jaine.bestApyPool.apyEstimate}% APY.`);
-    actions.push('Set an auto-review trigger when JAINE boosted APY drops by >20% from current levels.');
+    actions.push('Set an auto-review trigger when JAINE boosted APY drops by >20% from current level or risk score falls below 45.');
   }
 
   return {
-    summary: 'Rule-based agent strategy generated from live pool and wallet data.',
+    summary: `Professional ${riskProfile} strategy generated from live pool and wallet context with explicit allocation and rebalance policy.`,
     actions,
     risks,
     opportunities,
-    confidence: 0.68,
+    confidence: riskProfile === 'aggressive' ? 0.66 : 0.72,
   };
 }
 
@@ -141,7 +158,8 @@ router.get('/health', (_req, res) => {
 
 router.post('/agent/strategy', async (req, res) => {
   try {
-    const { walletAddress = null, riskProfile = 'balanced', userRequest = 'Build a DeFi strategy for my wallet.' } = req.body || {};
+    const { walletAddress = null, riskProfile = 'moderate', userRequest = 'Build a professional DeFi strategy for my wallet.' } = req.body || {};
+    const normalizedRiskProfile = normalizeRiskProfile(riskProfile);
 
     const [poolsData, jaineData, walletSnapshot] = await Promise.all([
       getPools(1),
@@ -183,7 +201,7 @@ router.post('/agent/strategy', async (req, res) => {
         geckoNetwork: poolsData?._meta?.network || null,
         geckoJaineDex: jaineData?._meta?.dex || null,
       },
-      riskProfile,
+      riskProfile: normalizedRiskProfile,
       market,
       jaine,
       wallet: walletSnapshot,
@@ -194,7 +212,7 @@ router.post('/agent/strategy', async (req, res) => {
       userRequest,
     });
 
-    const strategy = aiResult || ruleBasedStrategy({ market, jaine, wallet: walletSnapshot, riskProfile });
+    const strategy = aiResult || ruleBasedStrategy({ market, jaine, wallet: walletSnapshot, riskProfile: normalizedRiskProfile });
 
     return res.json({
       ok: true,
