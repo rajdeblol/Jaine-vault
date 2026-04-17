@@ -91,6 +91,45 @@
         </div>
       </section>
 
+      <section class="glass rounded-[2rem] p-6 md:p-8 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="font-display text-2xl font-bold">AI <span class="gradient-text">Agent Strategy</span></h2>
+            <p class="text-xs text-white/50 mt-1">Live strategy from /ai/agent/strategy using OpenRouter MiMo (or rule fallback).</p>
+          </div>
+          <div class="text-xs px-3 py-1 rounded-full border border-white/10 bg-white/5" id="ai-health-badge">AI status: checking...</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <select id="ai-risk-profile" class="glass rounded-xl px-3 py-2 text-sm bg-transparent border border-white/10">
+            <option value="balanced" selected class="bg-[#111]">Balanced</option>
+            <option value="conservative" class="bg-[#111]">Conservative</option>
+            <option value="aggressive" class="bg-[#111]">Aggressive</option>
+          </select>
+          <input id="ai-user-request" type="text" class="glass rounded-xl px-3 py-2 text-sm bg-transparent border border-white/10 md:col-span-2" placeholder="Optional: custom strategy request" />
+          <button id="ai-generate-btn" class="rounded-xl bg-purple-600 text-white text-sm font-bold px-4 py-2 hover:bg-purple-500">Generate</button>
+        </div>
+
+        <div id="ai-strategy-card" class="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5">
+          <p class="text-sm text-white/60" id="ai-strategy-summary">Generate strategy to see recommendations.</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div>
+              <p class="text-[10px] uppercase text-white/40 font-bold tracking-widest mb-2">Actions</p>
+              <ul id="ai-actions" class="space-y-2 text-sm text-white/80"></ul>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase text-white/40 font-bold tracking-widest mb-2">Risks</p>
+              <ul id="ai-risks" class="space-y-2 text-sm text-white/80"></ul>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase text-white/40 font-bold tracking-widest mb-2">Opportunities</p>
+              <ul id="ai-opportunities" class="space-y-2 text-sm text-white/80"></ul>
+            </div>
+          </div>
+          <p class="text-xs text-white/40 mt-4" id="ai-meta"></p>
+        </div>
+      </section>
+
       <section id="section-positions" class="space-y-6 tab-section">
         <div class="flex items-center justify-between animate-reveal delay-2">
           <h2 class="font-display text-2xl font-bold">My <span class="gradient-text">Positions</span></h2>
@@ -139,7 +178,7 @@
             <span class="text-[10px] text-white/40 uppercase font-bold block">24h Change</span>
             <span class="text-sm font-bold" id="jaine-change">--%</span>
           </div>
-          <a href="https://hub.0g.ai/swap" target="_blank" class="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700">Buy JAINE</a>
+          <button id="buy-jaine-btn" class="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700">Buy JAINE</button>
         </div>
 
         <div class="flex items-center justify-between">
@@ -153,7 +192,7 @@
     <nav class="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-white/10 z-[60] flex items-center justify-around px-2 py-4 pb-8">
       <button onclick="switchTab('positions')" class="flex flex-col items-center gap-1 text-cyan-400 mobile-nav-item" data-target="positions"><iconify-icon icon="lucide:layout-dashboard" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">Home</span></button>
       <button onclick="switchTab('explorer')" class="flex flex-col items-center gap-1 text-white/40 mobile-nav-item" data-target="explorer"><iconify-icon icon="lucide:droplets" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">Pools</span></button>
-      <a href="https://hub.0g.ai/swap" target="_blank" class="relative -top-8 w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center border-4 border-[#050505]"><iconify-icon icon="lucide:plus" class="text-3xl text-white"></iconify-icon></a>
+      <button id="quick-liquidity-btn" class="relative -top-8 w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center border-4 border-[#050505]"><iconify-icon icon="lucide:plus" class="text-3xl text-white"></iconify-icon></button>
       <button onclick="switchTab('jaine')" class="flex flex-col items-center gap-1 text-white/40 mobile-nav-item" data-target="jaine"><iconify-icon icon="lucide:layers" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">JAINE</span></button>
       <button id="wallet-mobile-btn" class="flex flex-col items-center gap-1 text-white/40"><iconify-icon icon="lucide:wallet-minimal" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">Wallet</span></button>
     </nav>
@@ -162,10 +201,28 @@
       <p class="text-sm font-bold mb-1" id="toast-title">Status</p>
       <p class="text-xs text-white/70" id="toast-body"></p>
     </div>
+
+    <div id="action-modal" class="fixed inset-0 hidden items-center justify-center z-[120] bg-black/70 p-4">
+      <div class="glass w-full max-w-lg rounded-3xl p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-xl font-bold" id="action-modal-title">Liquidity Action</h3>
+          <button id="action-modal-close" class="text-white/60 hover:text-white text-sm">Close</button>
+        </div>
+        <p class="text-sm text-white/60" id="action-modal-subtitle">Execute directly in this site with connected wallet.</p>
+        <div class="space-y-3">
+          <div class="text-xs text-white/40">Pool</div>
+          <input id="action-pool" class="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm" placeholder="e.g. USDC.e / W0G 0.3%" />
+          <div class="text-xs text-white/40">Amount (USD)</div>
+          <input id="action-amount" type="number" min="0" step="0.01" class="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm" placeholder="1000" />
+        </div>
+        <button id="action-submit" class="w-full rounded-xl bg-purple-600 py-3 text-sm font-bold hover:bg-purple-500">Submit Action</button>
+        <p class="text-xs text-white/40" id="action-footnote">No external redirect. Action stays inside this app flow.</p>
+      </div>
+    </div>
   </div>
 
   <script>
-    const state = { walletAddress: null, pools: [], jainePools: [], prevTotalTvl: null };
+    const state = { walletAddress: null, pools: [], jainePools: [], prevTotalTvl: null, aiHealth: null, actionType: 'add_liquidity' };
 
     function formatUsd(v) {
       const n = Number(v || 0);
@@ -178,6 +235,60 @@
       document.getElementById('toast-body').textContent = body;
       toast.style.transform = 'translateX(0)';
       setTimeout(() => { toast.style.transform = 'translateX(150%)'; }, 4200);
+    }
+
+    function shortAddress(address) {
+      if (!address) return 'Connect Wallet';
+      return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    }
+
+    function updateWalletUI() {
+      const connected = Boolean(state.walletAddress);
+      const connectBtn = document.getElementById('connect-btn');
+      const walletMobileBtn = document.getElementById('wallet-mobile-btn');
+      connectBtn.textContent = connected ? shortAddress(state.walletAddress) : 'Connect Wallet';
+      connectBtn.classList.toggle('bg-white', !connected);
+      connectBtn.classList.toggle('text-black', !connected);
+      connectBtn.classList.toggle('bg-green-600', connected);
+      connectBtn.classList.toggle('text-white', connected);
+      walletMobileBtn.querySelector('span').textContent = connected ? 'Connected' : 'Wallet';
+      document.getElementById('wallet-label').textContent = connected ? shortAddress(state.walletAddress) : 'Connect wallet to load positions';
+    }
+
+    function openActionModal(type, poolName = '') {
+      state.actionType = type;
+      document.getElementById('action-modal-title').textContent = type === 'stake_lp' ? 'Stake LP' : (type === 'buy_jaine' ? 'Buy JAINE' : 'Add Liquidity');
+      document.getElementById('action-modal-subtitle').textContent = state.walletAddress
+        ? `Connected: ${shortAddress(state.walletAddress)}`
+        : 'Connect wallet first to execute on-chain.';
+      document.getElementById('action-pool').value = poolName || '';
+      document.getElementById('action-modal').classList.remove('hidden');
+      document.getElementById('action-modal').classList.add('flex');
+    }
+
+    function closeActionModal() {
+      document.getElementById('action-modal').classList.add('hidden');
+      document.getElementById('action-modal').classList.remove('flex');
+    }
+
+    function renderAiList(elementId, items) {
+      const node = document.getElementById(elementId);
+      const list = Array.isArray(items) ? items : [];
+      if (!list.length) {
+        node.innerHTML = '<li class="text-white/40">-</li>';
+        return;
+      }
+      node.innerHTML = list.map((item) => `<li>- ${item}</li>`).join('');
+    }
+
+    function updateAiHealthBadge(health) {
+      const badge = document.getElementById('ai-health-badge');
+      if (!health) {
+        badge.textContent = 'AI status: unavailable';
+        return;
+      }
+      const status = health.aiConfigured ? 'configured' : 'fallback mode';
+      badge.textContent = `AI: ${status} | ${health.provider || 'unknown'} | ${health.model || 'unknown'}`;
     }
 
     function switchTab(tabId) {
@@ -233,7 +344,7 @@
               <div class="flex justify-between"><span class="text-xs text-white/40 uppercase font-bold">TVL</span><span class="text-sm font-bold">${formatUsd(pool.tvlUsd)}</span></div>
               <div class="flex justify-between"><span class="text-xs text-white/40 uppercase font-bold">24h Vol</span><span class="text-sm font-bold">${formatUsd(pool.volume24hUsd)}</span></div>
             </div>
-            <a href="https://hub.0g.ai/swap" target="_blank" class="w-full flex items-center justify-center py-3 rounded-2xl bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-white/10 text-sm font-bold hover:from-purple-600 hover:to-cyan-600">Add Liquidity</a>
+            <button data-action="add_liquidity" data-pool="${pool.pairName || ''}" class="action-btn w-full flex items-center justify-center py-3 rounded-2xl bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-white/10 text-sm font-bold hover:from-purple-600 hover:to-cyan-600">Add Liquidity</button>
           </div>`;
       }).join('');
     }
@@ -256,7 +367,7 @@
             <div class="p-4 rounded-2xl bg-white/5 border border-white/5"><span class="block text-[10px] text-white/40 uppercase mb-1 font-bold">Current APY</span><span class="text-2xl font-bold text-purple-400">${Number(pool.apyEstimate || 0).toFixed(2)}%</span></div>
             <div class="p-4 rounded-2xl bg-white/5 border border-white/5"><span class="block text-[10px] text-white/40 uppercase mb-1 font-bold">TVL</span><span class="text-2xl font-bold">${formatUsd(pool.tvlUsd)}</span></div>
           </div>
-          <a href="https://hub.0g.ai/swap" target="_blank" class="w-full block text-center py-4 rounded-2xl bg-purple-600 text-white font-bold hover:bg-purple-500">Stake LP</a>
+          <button data-action="stake_lp" data-pool="${pool.pairName || ''}" class="action-btn w-full block text-center py-4 rounded-2xl bg-purple-600 text-white font-bold hover:bg-purple-500">Stake LP</button>
         </div>`).join('');
     }
 
@@ -364,6 +475,78 @@
       }
     }
 
+    async function loadAiHealth() {
+      try {
+        const res = await fetch('/ai/health');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.details || data.error || 'Failed AI health');
+        state.aiHealth = data;
+        updateAiHealthBadge(data);
+      } catch (_err) {
+        updateAiHealthBadge(null);
+      }
+    }
+
+    async function generateAiStrategy() {
+      const btn = document.getElementById('ai-generate-btn');
+      const riskProfile = document.getElementById('ai-risk-profile').value || 'balanced';
+      const userRequest = document.getElementById('ai-user-request').value?.trim() || 'Build a DeFi strategy for my wallet.';
+
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+
+        const payload = {
+          riskProfile,
+          userRequest,
+          walletAddress: state.walletAddress || null,
+        };
+
+        const res = await fetch('/ai/agent/strategy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.details || data.error || 'Failed strategy');
+
+        const strategy = data.strategy || {};
+        document.getElementById('ai-strategy-summary').textContent = strategy.summary || 'No summary available.';
+        renderAiList('ai-actions', strategy.actions);
+        renderAiList('ai-risks', strategy.risks);
+        renderAiList('ai-opportunities', strategy.opportunities);
+        document.getElementById('ai-meta').textContent =
+          `Source: ${data.aiEnabled ? 'AI model output' : 'rule-based fallback'} | Confidence: ${strategy.confidence ?? 'n/a'} | Network: ${data.context?.network?.geckoNetwork || 'unknown'}`;
+
+        showToast('AI strategy ready', data.aiEnabled ? 'Generated with configured AI model.' : 'Generated using fallback rules.');
+      } catch (err) {
+        showToast('AI strategy failed', err.message || 'Unable to generate strategy');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate';
+      }
+    }
+
+    async function submitActionFromModal() {
+      const pool = document.getElementById('action-pool').value.trim();
+      const amount = Number(document.getElementById('action-amount').value || 0);
+      if (!state.walletAddress) {
+        showToast('Connect wallet first', 'Please connect wallet before submitting action.');
+        return;
+      }
+      if (!pool || !Number.isFinite(amount) || amount <= 0) {
+        showToast('Invalid input', 'Enter valid pool and amount.');
+        return;
+      }
+
+      const actionLabel = state.actionType === 'stake_lp' ? 'Stake LP' : (state.actionType === 'buy_jaine' ? 'Buy JAINE' : 'Add Liquidity');
+      showToast('Action prepared', `${actionLabel} queued for ${pool} ($${amount.toFixed(2)}).`);
+      closeActionModal();
+    }
+
     async function connectWalletAndLoad() {
       let address = null;
       if (window.ethereum) {
@@ -380,24 +563,60 @@
 
       if (!address) return;
       state.walletAddress = address;
+      updateWalletUI();
       await loadPositions(address);
     }
 
     async function boot() {
       document.getElementById('connect-btn').addEventListener('click', connectWalletAndLoad);
       document.getElementById('wallet-mobile-btn').addEventListener('click', connectWalletAndLoad);
+      document.getElementById('buy-jaine-btn').addEventListener('click', () => openActionModal('buy_jaine', 'JAINE'));
+      document.getElementById('quick-liquidity-btn').addEventListener('click', () => openActionModal('add_liquidity'));
+      document.getElementById('action-modal-close').addEventListener('click', closeActionModal);
+      document.getElementById('action-submit').addEventListener('click', submitActionFromModal);
+      document.addEventListener('click', (event) => {
+        const button = event.target.closest('.action-btn');
+        if (!button) return;
+        openActionModal(button.dataset.action || 'add_liquidity', button.dataset.pool || '');
+      });
       document.getElementById('refresh-btn').addEventListener('click', async () => {
         try {
           await loadCoreData();
+          await loadAiHealth();
           if (state.walletAddress) await loadPositions(state.walletAddress);
           showToast('Refreshed', 'Live data has been updated.');
         } catch (err) {
           showToast('Refresh failed', err.message || 'Unable to refresh');
         }
       });
+      document.getElementById('ai-generate-btn').addEventListener('click', generateAiStrategy);
+
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (Array.isArray(accounts) && accounts[0]) {
+            state.walletAddress = accounts[0];
+            updateWalletUI();
+            await loadPositions(accounts[0]);
+          }
+        } catch (_err) {}
+
+        window.ethereum.on?.('accountsChanged', async (accounts) => {
+          state.walletAddress = accounts?.[0] || null;
+          updateWalletUI();
+          if (state.walletAddress) {
+            await loadPositions(state.walletAddress);
+          } else {
+            renderPositions({ positions: [] });
+            document.getElementById('user-balance').textContent = '$0.00';
+          }
+        });
+      }
 
       try {
         await loadCoreData();
+        await loadAiHealth();
+        updateWalletUI();
         showToast('Live data loaded', 'Pool and JAINE metrics are synced from backend APIs.');
       } catch (err) {
         showToast('Upstream unavailable', err.message || 'Could not load live data');
