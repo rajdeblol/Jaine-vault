@@ -37,16 +37,9 @@ If GeckoTerminal changes network/dex slugs, update `GECKO_NETWORK` / `GECKO_JAIN
 - Optional wallet LP snapshot (if `walletAddress` is provided)
 - Risk profile (`conservative`, `balanced`, `aggressive`)
 
-OpenRouter + MiMo integration is supported via:
-- `AI_PROVIDER=openrouter`
-- `OPENROUTER_API_URL` (default: `https://openrouter.ai/api/v1/chat/completions`)
-- `OPENROUTER_API_KEY`
-- `OPENROUTER_MODEL` (use: `xiaomi/mimo-v2-pro`)
-- optional: `OPENROUTER_HTTP_REFERER`, `OPENROUTER_X_TITLE`
+OpenAI integration is supported via:
+- `AI_PROVIDER=openai`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL` (default: `gpt-4o-mini`)
 
-Direct MiMo endpoint mode is also available via:
-- `AI_PROVIDER=mimo`
-- `MIMO_API_URL`, `MIMO_API_KEY`, `MIMO_MODEL`
-
-If MiMo vars are not set, it falls back to `AI_URL` + `AI_KEY`.
-If not configured, it returns a deterministic rule-based strategy from live data.
+If API variables are not configured, it returns a deterministic rule-based strategy from live data.

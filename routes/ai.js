@@ -146,12 +146,7 @@ router.get('/health', (_req, res) => {
     aiConfigured: isAiConfigured(),
     provider: endpoint.provider,
     model: endpoint.model,
-    hasOpenRouterUrl: Boolean(process.env.OPENROUTER_API_URL),
-    hasOpenRouterKey: Boolean(process.env.OPENROUTER_API_KEY),
-    hasMimoUrl: Boolean(process.env.MIMO_API_URL),
-    hasMimoKey: Boolean(process.env.MIMO_API_KEY),
-    hasAiUrl: Boolean(process.env.AI_URL),
-    hasAiKey: Boolean(process.env.AI_KEY),
+    hasOpenAiKey: Boolean(process.env.OPENAI_API_KEY),
     hasSystemPrompt: Boolean(process.env.SYSTEM_PROMPT),
   });
 });

@@ -1,170 +1,92 @@
 const axios = require('axios');
 
-const AI_PROVIDER = process.env.AI_PROVIDER || 'openrouter';
-const MIMO_API_URL = process.env.MIMO_API_URL || '';
-const MIMO_API_KEY = process.env.MIMO_API_KEY || '';
-const MIMO_MODEL = process.env.MIMO_MODEL || 'mimo-v2-pro';
-const OPENROUTER_API_URL = process.env.OPENROUTER_API_URL || 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'xiaomi/mimo-v2-pro';
-const OPENROUTER_HTTP_REFERER = process.env.OPENROUTER_HTTP_REFERER || '';
-const OPENROUTER_X_TITLE = process.env.OPENROUTER_X_TITLE || '0G Jaine Vault';
-const AI_URL = process.env.AI_URL || '';
-const AI_KEY = process.env.AI_KEY || '';
-const SYSTEM_PROMPT =
-  process.env.SYSTEM_PROMPT ||
-  'You are a professional institutional DeFi portfolio manager. Provide precise, risk-aware, execution-ready recommendations with concise rationale.';
+function isAiConfigured() {
+  return Boolean(process.env.OPENAI_API_KEY);
+}
 
 function resolveEndpoint() {
-  if (AI_PROVIDER === 'openrouter') {
-    return {
-      url: OPENROUTER_API_URL || AI_URL,
-      key: OPENROUTER_API_KEY || AI_KEY,
-      model: OPENROUTER_MODEL || MIMO_MODEL || process.env.AI_MODEL || 'xiaomi/mimo-v2-pro',
-      provider: 'openrouter',
-    };
-  }
-
-  if (AI_PROVIDER === 'mimo') {
-    return {
-      url: MIMO_API_URL || AI_URL,
-      key: MIMO_API_KEY || AI_KEY,
-      model: MIMO_MODEL || process.env.AI_MODEL || 'mimo-v2-pro',
-      provider: 'mimo',
-    };
-  }
-
   return {
-    url: AI_URL || MIMO_API_URL,
-    key: AI_KEY || MIMO_API_KEY,
-    model: process.env.AI_MODEL || MIMO_MODEL || 'gpt-4o-mini',
-    provider: 'generic',
+    provider: 'openai',
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    url: 'https://api.openai.com/v1/chat/completions',
+    key: process.env.OPENAI_API_KEY
   };
-}
-
-function isAiConfigured() {
-  const cfg = resolveEndpoint();
-  return Boolean(cfg.url && cfg.key);
-}
-
-function normalizeAiText(payload) {
-  if (!payload || typeof payload !== 'object') {
-    return '';
-  }
-
-  if (typeof payload.output_text === 'string' && payload.output_text.trim()) {
-    return payload.output_text.trim();
-  }
-
-  const choiceText = payload.choices?.[0]?.message?.content;
-  if (typeof choiceText === 'string' && choiceText.trim()) {
-    return choiceText.trim();
-  }
-
-  const dataText = payload.data?.[0]?.content?.[0]?.text;
-  if (typeof dataText === 'string' && dataText.trim()) {
-    return dataText.trim();
-  }
-
-  if (typeof payload.text === 'string' && payload.text.trim()) {
-    return payload.text.trim();
-  }
-
-  return '';
 }
 
 async function generateStrategy({ context, userRequest }) {
   if (!isAiConfigured()) {
     return null;
   }
-  const cfg = resolveEndpoint();
 
-  const prompt = [
-    'User request:',
-    userRequest,
-    '',
-    'Live DeFi context (JSON):',
-    JSON.stringify(context, null, 2),
-    '',
-    'Return strict JSON with keys:',
-    '- summary: short executive summary',
-    '- actions: array of concrete execution steps (at least 4)',
-    '- risks: array of key portfolio and market risks',
-    '- opportunities: array of high-conviction opportunities',
-    '- confidence: number from 0 to 1',
-    '',
-    'Requirements:',
-    '- Strategy must explicitly reflect riskProfile in context.',
-    '- Use professional language appropriate for a portfolio manager.',
-    '- Include allocation and rebalancing intent in actions.',
-    '- Do not include markdown.',
-  ].join('\n');
+  const endpoint = resolveEndpoint();
+  const systemPrompt = process.env.SYSTEM_PROMPT || `You are the "Grandmaster of Yield," an eccentric, theatrical, and exceptionally brilliant DeFi strategist. You don't just give financial advice; you narrate epic sagas of wealth creation.
+Your goal is to provide a uniquely stylized DeFi strategy framework based on the user's risk profile and the live market data provided.
+You MUST invent a cool, dramatic name for the strategy (e.g., "The Obsidian Phalanx", "The Whispering Viper Matrix") and present your analysis with flair and mystique, while still grounding your final recommendations in the concrete numbers provided in the context.
 
-  const body = {
-    model: cfg.model,
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: prompt },
-    ],
-    temperature: 0.2,
-  };
+Respond ONLY with a valid JSON object matching this structure (no markdown code blocks, just raw JSON):
+{
+  "summary": "Start with the strategy name followed by a captivating, dramatic paragraph summarizing the approach.",
+  "actions": [
+    "A list of highly actionable, concrete steps to take in the markets..."
+  ],
+  "risks": [
+    "Theatrical warnings about potential downfalls (impermanent loss, low TVL)..."
+  ],
+  "opportunities": [
+    "Highlighting the most lucrative pools and how to exploit them..."
+  ],
+  "confidence": 0.0 to 1.0 representing your mystical certainty
+}`;
 
-  const headers = {
-    Authorization: `Bearer ${cfg.key}`,
-    'Content-Type': 'application/json',
-  };
-  if (cfg.provider === 'openrouter') {
-    if (OPENROUTER_HTTP_REFERER) {
-      headers['HTTP-Referer'] = OPENROUTER_HTTP_REFERER;
-    }
-    if (OPENROUTER_X_TITLE) {
-      headers['X-Title'] = OPENROUTER_X_TITLE;
-    }
-  }
+  const prompt = `Context: ${JSON.stringify(context, null, 2)}\nUser Request: ${userRequest}\nAnalyze the provided market summary, wallet snapshot, and risk profile. Embody the Grandmaster of Yield and deliver your JSON strategy!`;
 
-  async function requestOnce() {
-    return axios.post(cfg.url, body, {
-      headers,
-      timeout: 20_000,
-    });
-  }
-
-  let response;
   try {
-    response = await requestOnce();
+    const response = await axios.post(
+      endpoint.url,
+      {
+        model: endpoint.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.8,
+        response_format: { type: "json_object" }
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${endpoint.key}`
+        }
+      }
+    );
+
+    const resultText = response.data.choices[0].message.content;
+    
+    try {
+      const parsed = JSON.parse(resultText);
+      return parsed;
+    } catch (parseError) {
+      // Fallback if the AI messes up the exact JSON format somehow
+      return {
+        summary: "The Grandmaster has spoken, but alas, the mystical runes were garbled. Here is a deciphered attempt.",
+        actions: ["Review the market directly, as the vision was clouded."],
+        risks: ["The AI response could not be parsed as pure JSON."],
+        opportunities: [],
+        confidence: 0.1
+      };
+    }
   } catch (error) {
-    const status = Number(error?.response?.status || 0);
-    if (status === 429) {
-      const retryAfterHeader = Number(error?.response?.headers?.['retry-after'] || 0);
-      const retryMs = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0 ? retryAfterHeader * 1000 : 1200;
-      await new Promise((resolve) => setTimeout(resolve, retryMs));
-      response = await requestOnce();
-    } else {
-      throw error;
+    if (error.response && error.response.status === 429) {
+      const err = new Error('Rate limit exceeded');
+      err.response = { status: 429 };
+      throw err;
     }
-  }
-
-  const text = normalizeAiText(response.data);
-
-  if (!text) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(text);
-  } catch (_err) {
-    return {
-      summary: text,
-      actions: [],
-      risks: [],
-      opportunities: [],
-      confidence: 0.45,
-    };
+    throw error;
   }
 }
 
 module.exports = {
-  resolveEndpoint,
   isAiConfigured,
-  generateStrategy,
+  resolveEndpoint,
+  generateStrategy
 };
