@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JAINE Yield Hub | 0G Chain DeFi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500&f[]=satoshi@700,500,400&display=swap');
+
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent-purple: #7C3AED;
+      --accent-cyan: #06B6D4;
+    }
+
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Satoshi', sans-serif; background-color: #050505; color: #fff; overflow-x: hidden; }
+    .font-display { font-family: 'Cabinet Grotesk', sans-serif; }
+    .glass { background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--glass-border); }
+    .glass-card { position: relative; transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
+    .glass-card:hover { transform: translateY(-4px) scale(1.01); border-color: rgba(124, 58, 237, 0.3); box-shadow: 0 10px 40px -10px rgba(124, 58, 237, 0.2); }
+    .jaine-card:hover { box-shadow: 0 0 30px rgba(124, 58, 237, 0.4); border-color: rgba(124, 58, 237, 0.6); }
+    .gradient-text { background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    @keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-reveal { animation: countUp 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards; opacity: 0; }
+    .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; }
+    .tab-active { color: #fff !important; border-bottom: 2px solid var(--accent-cyan); }
+    .hidden-section { display: none; }
+    .skeleton { background: linear-gradient(90deg, #121212 25%, #1a1a1a 50%, #121212 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-[#050505] relative overflow-hidden flex flex-col">
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+
+    <header class="sticky top-0 z-50 glass border-b border-white/5 px-6 py-4 hidden md:block">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center shadow-[0_0_15px_rgba(124,58,237,0.4)]">
+            <iconify-icon icon="lucide:layers" class="text-white text-2xl"></iconify-icon>
+          </div>
+          <span class="font-display text-2xl font-bold tracking-tight">JAINE<span class="gradient-text">Yield Hub</span></span>
+        </div>
+        <nav class="flex items-center gap-8">
+          <button onclick="switchTab('positions')" id="nav-positions" class="text-sm font-medium text-white tab-trigger">My Positions</button>
+          <button onclick="switchTab('explorer')" id="nav-explorer" class="text-sm font-medium text-white/60 hover:text-white tab-trigger">Yield Explorer</button>
+          <button onclick="switchTab('jaine')" id="nav-jaine" class="text-sm font-medium text-white/60 hover:text-white tab-trigger">JAINE Pools</button>
+        </nav>
+        <div class="flex items-center gap-4">
+          <div class="flex flex-col items-end">
+            <span class="text-[10px] text-white/40 uppercase tracking-widest font-bold">Network</span>
+            <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div><span class="text-xs font-medium">0G Chain</span></div>
+          </div>
+          <button id="connect-btn" class="px-6 py-2.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all">Connect Wallet</button>
+        </div>
+      </div>
+    </header>
+
+    <header class="md:hidden glass px-6 py-4 flex items-center justify-between sticky top-0 z-50 border-b border-white/5">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center"><iconify-icon icon="lucide:layers" class="text-white text-lg"></iconify-icon></div>
+        <span class="font-display text-lg font-bold tracking-tight">JAINE HUB</span>
+      </div>
+      <div class="w-2 h-2 rounded-full bg-green-500"></div>
+    </header>
+
+    <main class="flex-1 max-w-7xl mx-auto w-full p-6 md:p-8 space-y-8 pb-32 md:pb-12">
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-reveal delay-1">
+        <div class="glass-card glass rounded-3xl p-8">
+          <h3 class="text-white/40 text-sm font-medium mb-2 uppercase tracking-wide">Total TVL on 0G Chain</h3>
+          <div class="flex items-baseline gap-2">
+            <span class="text-4xl md:text-5xl font-display font-bold tracking-tight" id="total-tvl">$--</span>
+            <span class="text-green-400 text-sm font-bold" id="tvl-change">--</span>
+          </div>
+          <span class="text-xs text-white/40 mt-6 block">Live from on-chain indexed pools</span>
+        </div>
+        <div class="glass-card glass rounded-3xl p-8">
+          <h3 class="text-white/40 text-sm font-medium mb-2 uppercase tracking-wide">Highest Pool APY</h3>
+          <span class="text-4xl md:text-5xl font-display font-bold tracking-tight gradient-text" id="max-apy">--%</span>
+          <div class="mt-6 text-xs text-white/40" id="top-pair">Top performing pair: --</div>
+        </div>
+        <div class="glass-card glass rounded-3xl p-8 flex flex-col justify-center">
+          <h3 class="text-white/40 text-sm font-medium mb-2 uppercase tracking-wide">Your LP Value</h3>
+          <span class="text-4xl md:text-5xl font-display font-bold tracking-tight" id="user-balance">$0.00</span>
+          <div class="mt-6 text-xs text-white/40" id="wallet-label">Connect wallet to load positions</div>
+        </div>
+      </section>
+
+      <section id="section-positions" class="space-y-6 tab-section">
+        <div class="flex items-center justify-between animate-reveal delay-2">
+          <h2 class="font-display text-2xl font-bold">My <span class="gradient-text">Positions</span></h2>
+          <button id="refresh-btn" class="text-sm text-white/60 hover:text-white">Refresh</button>
+        </div>
+
+        <div class="glass rounded-[2rem] p-4 md:p-8 animate-reveal delay-3 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="text-white/40 text-[10px] uppercase tracking-widest font-bold border-b border-white/5">
+                  <th class="pb-4 pl-2">Token Pair</th>
+                  <th class="pb-4">USD Value</th>
+                  <th class="pb-4">IL %</th>
+                  <th class="pb-4">Fees Earned</th>
+                  <th class="pb-4">Tick Range</th>
+                  <th class="pb-4">Status</th>
+                </tr>
+              </thead>
+              <tbody id="positions-tbody" class="divide-y divide-white/5"></tbody>
+            </table>
+          </div>
+          <p id="positions-empty" class="text-sm text-white/50 py-6">Connect wallet to view LP positions.</p>
+        </div>
+      </section>
+
+      <section id="section-explorer" class="space-y-6 tab-section hidden-section">
+        <div class="flex items-center justify-between">
+          <h2 class="font-display text-2xl font-bold">Yield <span class="gradient-text">Explorer</span></h2>
+          <span class="text-xs text-white/50">Live APY/TVL via GeckoTerminal + backend risk score</span>
+        </div>
+        <div id="explorer-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+      </section>
+
+      <section id="section-jaine" class="space-y-6 tab-section hidden-section">
+        <div class="glass rounded-2xl p-4 flex flex-wrap items-center justify-between gap-6">
+          <div>
+            <span class="text-[10px] text-white/40 uppercase font-bold block">JAINE Price</span>
+            <span class="text-sm font-bold" id="jaine-price">$--</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-white/40 uppercase font-bold block">Market Cap</span>
+            <span class="text-sm font-bold" id="jaine-marketcap">$--</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-white/40 uppercase font-bold block">24h Change</span>
+            <span class="text-sm font-bold" id="jaine-change">--%</span>
+          </div>
+          <a href="https://hub.0g.ai/swap" target="_blank" class="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700">Buy JAINE</a>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <h2 class="font-display text-2xl font-bold">Boosted <span class="gradient-text">JAINE Pools</span></h2>
+          <span class="text-xs text-purple-400 font-bold">Extra Rewards Active</span>
+        </div>
+        <div id="jaine-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+      </section>
+    </main>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-white/10 z-[60] flex items-center justify-around px-2 py-4 pb-8">
+      <button onclick="switchTab('positions')" class="flex flex-col items-center gap-1 text-cyan-400 mobile-nav-item" data-target="positions"><iconify-icon icon="lucide:layout-dashboard" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">Home</span></button>
+      <button onclick="switchTab('explorer')" class="flex flex-col items-center gap-1 text-white/40 mobile-nav-item" data-target="explorer"><iconify-icon icon="lucide:droplets" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">Pools</span></button>
+      <a href="https://hub.0g.ai/swap" target="_blank" class="relative -top-8 w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center border-4 border-[#050505]"><iconify-icon icon="lucide:plus" class="text-3xl text-white"></iconify-icon></a>
+      <button onclick="switchTab('jaine')" class="flex flex-col items-center gap-1 text-white/40 mobile-nav-item" data-target="jaine"><iconify-icon icon="lucide:layers" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">JAINE</span></button>
+      <button id="wallet-mobile-btn" class="flex flex-col items-center gap-1 text-white/40"><iconify-icon icon="lucide:wallet-minimal" class="text-2xl"></iconify-icon><span class="text-[10px] font-bold uppercase">Wallet</span></button>
+    </nav>
+
+    <div id="toast" class="fixed bottom-32 md:bottom-8 right-8 glass border-l-4 border-purple-600 p-4 rounded-xl translate-x-[150%] transition-transform duration-500 z-[100] max-w-sm">
+      <p class="text-sm font-bold mb-1" id="toast-title">Status</p>
+      <p class="text-xs text-white/70" id="toast-body"></p>
+    </div>
+  </div>
+
+  <script>
+    const state = { walletAddress: null, pools: [], jainePools: [], prevTotalTvl: null };
+
+    function formatUsd(v) {
+      const n = Number(v || 0);
+      return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    }
+
+    function showToast(title, body) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-body').textContent = body;
+      toast.style.transform = 'translateX(0)';
+      setTimeout(() => { toast.style.transform = 'translateX(150%)'; }, 4200);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-section').forEach((section) => section.classList.add('hidden-section'));
+      const section = document.getElementById(`section-${tabId}`);
+      section.classList.remove('hidden-section');
+
+      document.querySelectorAll('.tab-trigger').forEach((trigger) => {
+        trigger.classList.remove('text-white');
+        trigger.classList.add('text-white/60');
+      });
+      const nav = document.getElementById(`nav-${tabId}`);
+      if (nav) { nav.classList.add('text-white'); nav.classList.remove('text-white/60'); }
+
+      document.querySelectorAll('.mobile-nav-item').forEach((item) => {
+        item.classList.remove('text-cyan-400');
+        item.classList.add('text-white/40');
+        if (item.dataset.target === tabId) {
+          item.classList.add('text-cyan-400');
+          item.classList.remove('text-white/40');
+        }
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function riskLabel(score) {
+      if (score >= 70) return { text: 'Low Risk', cls: 'text-cyan-400 border-cyan-500/20 bg-cyan-500/10' };
+      if (score >= 40) return { text: 'Medium Risk', cls: 'text-yellow-400 border-yellow-500/20 bg-yellow-500/10' };
+      return { text: 'High Risk', cls: 'text-red-400 border-red-500/20 bg-red-500/10' };
+    }
+
+    function renderExplorer() {
+      const grid = document.getElementById('explorer-grid');
+      if (!state.pools.length) {
+        grid.innerHTML = '<div class="glass rounded-2xl p-6 text-sm text-white/50">No pool data available.</div>';
+        return;
+      }
+
+      grid.innerHTML = state.pools.slice(0, 8).map((pool) => {
+        const risk = riskLabel(pool.riskScore);
+        return `
+          <div class="glass-card glass rounded-[2rem] p-6 group cursor-pointer">
+            <div class="flex justify-between items-start mb-6">
+              <div class="text-white/80 font-bold text-sm">${pool.pairName || 'Unknown Pair'}</div>
+              <div class="px-3 py-1 rounded-full border ${risk.cls}">
+                <span class="text-[10px] font-bold uppercase tracking-wider">${risk.text}</span>
+              </div>
+            </div>
+            <p class="text-xs text-white/40 mb-6">Fee Tier: ${(Number(pool.feeTier || 0) * 100).toFixed(2)}%</p>
+            <div class="space-y-4 mb-6">
+              <div class="flex justify-between"><span class="text-xs text-white/40 uppercase font-bold">APY</span><span class="text-lg font-bold text-cyan-400">${Number(pool.apyEstimate || 0).toFixed(2)}%</span></div>
+              <div class="flex justify-between"><span class="text-xs text-white/40 uppercase font-bold">TVL</span><span class="text-sm font-bold">${formatUsd(pool.tvlUsd)}</span></div>
+              <div class="flex justify-between"><span class="text-xs text-white/40 uppercase font-bold">24h Vol</span><span class="text-sm font-bold">${formatUsd(pool.volume24hUsd)}</span></div>
+            </div>
+            <a href="https://hub.0g.ai/swap" target="_blank" class="w-full flex items-center justify-center py-3 rounded-2xl bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-white/10 text-sm font-bold hover:from-purple-600 hover:to-cyan-600">Add Liquidity</a>
+          </div>`;
+      }).join('');
+    }
+
+    function renderJainePools() {
+      const grid = document.getElementById('jaine-grid');
+      if (!state.jainePools.length) {
+        grid.innerHTML = '<div class="glass rounded-2xl p-6 text-sm text-white/50">No JAINE pools available.</div>';
+        return;
+      }
+
+      grid.innerHTML = state.jainePools.slice(0, 6).map((pool) => `
+        <div class="glass-card jaine-card glass rounded-[2rem] p-8 group">
+          <div class="flex justify-between items-start mb-6">
+            <h4 class="text-xl font-bold">${pool.pairName || 'JAINE Pair'}</h4>
+            <div class="px-3 py-1 rounded-full bg-gradient-to-r from-purple-600 to-cyan-500"><span class="text-[10px] font-bold uppercase">${pool.flag || 'JAINE_BOOSTED'}</span></div>
+          </div>
+          <p class="text-sm text-white/40 mb-8">Risk score: ${Number(pool.riskScore || 0).toFixed(2)}</p>
+          <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/5"><span class="block text-[10px] text-white/40 uppercase mb-1 font-bold">Current APY</span><span class="text-2xl font-bold text-purple-400">${Number(pool.apyEstimate || 0).toFixed(2)}%</span></div>
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/5"><span class="block text-[10px] text-white/40 uppercase mb-1 font-bold">TVL</span><span class="text-2xl font-bold">${formatUsd(pool.tvlUsd)}</span></div>
+          </div>
+          <a href="https://hub.0g.ai/swap" target="_blank" class="w-full block text-center py-4 rounded-2xl bg-purple-600 text-white font-bold hover:bg-purple-500">Stake LP</a>
+        </div>`).join('');
+    }
+
+    function renderPositions(data) {
+      const tbody = document.getElementById('positions-tbody');
+      const empty = document.getElementById('positions-empty');
+      const positions = data?.positions || [];
+
+      if (!positions.length) {
+        tbody.innerHTML = '';
+        empty.textContent = state.walletAddress ? 'No Uniswap V3 positions found for this wallet.' : 'Connect wallet to view LP positions.';
+        return;
+      }
+
+      empty.textContent = '';
+      tbody.innerHTML = positions.map((pos) => {
+        const ilClass = pos.ilPercent > 0 ? 'text-red-400' : 'text-green-400';
+        const feesUsd = Number(pos.feesEarned0 || 0) + Number(pos.feesEarned1 || 0);
+        const status = pos.ilPercent > 5 ? 'Review' : 'Hold';
+        const statusCls = pos.ilPercent > 5 ? 'text-red-400 bg-red-500/10 border-red-500/20' : 'text-green-400 bg-green-500/10 border-green-500/20';
+
+        return `
+          <tr class="group hover:bg-white/5 transition-colors">
+            <td class="py-5 pl-2 text-sm font-bold">${pos.token0.symbol || 'T0'} / ${pos.token1.symbol || 'T1'}</td>
+            <td class="py-5 font-medium text-sm">${formatUsd(pos.usdValue)}</td>
+            <td class="py-5 text-sm ${ilClass}">${Number(pos.ilPercent || 0).toFixed(2)}%</td>
+            <td class="py-5 text-sm font-bold text-green-400">+${feesUsd.toFixed(4)}</td>
+            <td class="py-5 text-xs text-white/60">${pos.tickLower} to ${pos.tickUpper}</td>
+            <td class="py-5"><span class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${statusCls}">${status}</span></td>
+          </tr>`;
+      }).join('');
+    }
+
+    function pickJaineTokenAddress(jainePools) {
+      for (const pool of jainePools || []) {
+        const name = (pool.pairName || '').toLowerCase();
+        if (name.includes('jaine')) {
+          if (pool.token0Address && !pool.token0Address.endsWith('0000000000000000000000000000000000000000')) return pool.token0Address;
+          if (pool.token1Address && !pool.token1Address.endsWith('0000000000000000000000000000000000000000')) return pool.token1Address;
+        }
+      }
+      return null;
+    }
+
+    async function loadCoreData() {
+      const [poolsRes, jaineRes] = await Promise.all([fetch('/pools'), fetch('/pools/jaine')]);
+      const poolsJson = await poolsRes.json();
+      const jaineJson = await jaineRes.json();
+
+      if (!poolsRes.ok) throw new Error(poolsJson.details || poolsJson.error || 'Failed pools');
+      if (!jaineRes.ok) throw new Error(jaineJson.details || jaineJson.error || 'Failed JAINE pools');
+
+      state.pools = poolsJson.pools || [];
+      state.jainePools = jaineJson.pools || [];
+
+      const totalTvl = state.pools.reduce((acc, p) => acc + Number(p.tvlUsd || 0), 0);
+      const top = [...state.pools].sort((a, b) => Number(b.apyEstimate || 0) - Number(a.apyEstimate || 0))[0];
+
+      document.getElementById('total-tvl').textContent = formatUsd(totalTvl);
+      const tvlChangeNode = document.getElementById('tvl-change');
+      if (state.prevTotalTvl && state.prevTotalTvl > 0) {
+        const delta = ((totalTvl - state.prevTotalTvl) / state.prevTotalTvl) * 100;
+        tvlChangeNode.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}%`;
+        tvlChangeNode.classList.toggle('text-green-400', delta >= 0);
+        tvlChangeNode.classList.toggle('text-red-400', delta < 0);
+      } else {
+        tvlChangeNode.textContent = '--';
+      }
+      state.prevTotalTvl = totalTvl;
+      document.getElementById('max-apy').textContent = top ? `${Number(top.apyEstimate || 0).toFixed(2)}%` : '--%';
+      document.getElementById('top-pair').textContent = top ? `Top performing pair: ${top.pairName}` : 'Top performing pair: --';
+
+      renderExplorer();
+      renderJainePools();
+
+      const jaineToken = pickJaineTokenAddress(state.jainePools);
+      if (jaineToken) {
+        const tokenRes = await fetch(`/token/${jaineToken}`);
+        const tokenJson = await tokenRes.json();
+        if (tokenRes.ok) {
+          document.getElementById('jaine-price').textContent = formatUsd(tokenJson.priceUsd);
+          document.getElementById('jaine-marketcap').textContent = formatUsd(tokenJson.marketCapUsd || tokenJson.fdvUsd);
+          const change = Number(tokenJson.change24hPercent || 0);
+          const changeNode = document.getElementById('jaine-change');
+          changeNode.textContent = `${change.toFixed(2)}%`;
+          changeNode.classList.toggle('text-green-400', change >= 0);
+          changeNode.classList.toggle('text-red-400', change < 0);
+        }
+      }
+    }
+
+    async function loadPositions(address) {
+      try {
+        const res = await fetch(`/positions/${address}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.details || data.error || 'Failed positions');
+
+        renderPositions(data);
+        const totalValue = (data.positions || []).reduce((acc, p) => acc + Number(p.usdValue || 0), 0);
+        document.getElementById('user-balance').textContent = formatUsd(totalValue);
+        document.getElementById('wallet-label').textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
+        showToast('Wallet connected', `Loaded ${data.count || 0} LP position(s).`);
+      } catch (err) {
+        showToast('Position fetch failed', err.message || 'Unable to load wallet positions');
+      }
+    }
+
+    async function connectWalletAndLoad() {
+      let address = null;
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          address = accounts?.[0] || null;
+        } catch (_err) {}
+      }
+
+      if (!address) {
+        const input = prompt('Enter wallet address to load LP positions');
+        if (input && input.trim()) address = input.trim();
+      }
+
+      if (!address) return;
+      state.walletAddress = address;
+      await loadPositions(address);
+    }
+
+    async function boot() {
+      document.getElementById('connect-btn').addEventListener('click', connectWalletAndLoad);
+      document.getElementById('wallet-mobile-btn').addEventListener('click', connectWalletAndLoad);
+      document.getElementById('refresh-btn').addEventListener('click', async () => {
+        try {
+          await loadCoreData();
+          if (state.walletAddress) await loadPositions(state.walletAddress);
+          showToast('Refreshed', 'Live data has been updated.');
+        } catch (err) {
+          showToast('Refresh failed', err.message || 'Unable to refresh');
+        }
+      });
+
+      try {
+        await loadCoreData();
+        showToast('Live data loaded', 'Pool and JAINE metrics are synced from backend APIs.');
+      } catch (err) {
+        showToast('Upstream unavailable', err.message || 'Could not load live data');
+      }
+    }
+
+    window.addEventListener('load', boot);
+  </script>
+</body>
+</html>
