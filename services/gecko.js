@@ -5,6 +5,8 @@ const CACHE_TTL_MS = 30_000;
 const MAX_CALLS_PER_MINUTE = 10;
 const GECKO_NETWORK = process.env.GECKO_NETWORK || 'zero-gravity';
 const GECKO_JAINE_DEX = process.env.GECKO_JAINE_DEX || 'jaine';
+const GECKO_NETWORKS = process.env.GECKO_NETWORKS || '';
+const GECKO_JAINE_DEXES = process.env.GECKO_JAINE_DEXES || '';
 
 const http = axios.create({
   baseURL: BASE_URL,
@@ -65,20 +67,98 @@ async function get(path, params = {}) {
   return response.data;
 }
 
+function unique(values) {
+  return [...new Set(values.filter(Boolean).map((v) => String(v).trim()).filter(Boolean))];
+}
+
+function getNetworkCandidates() {
+  const envList = GECKO_NETWORKS.split(',');
+  return unique([GECKO_NETWORK, ...envList, 'zero-gravity', '0g', 'zg', 'zog']);
+}
+
+function getDexCandidates() {
+  const envList = GECKO_JAINE_DEXES.split(',');
+  return unique([GECKO_JAINE_DEX, ...envList, 'jaine']);
+}
+
+function isNotFound(error) {
+  return Number(error?.response?.status) === 404;
+}
+
+async function getAcrossNetworks(pathBuilder, params = {}) {
+  const networks = getNetworkCandidates();
+  let lastError = null;
+
+  for (const network of networks) {
+    try {
+      const data = await get(pathBuilder(network), params);
+      return {
+        ...data,
+        _meta: {
+          network,
+        },
+      };
+    } catch (error) {
+      lastError = error;
+      if (isNotFound(error)) {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+  throw new Error('No Gecko network candidates available');
+}
+
+async function getAcrossNetworkDex(pathBuilder, params = {}) {
+  const networks = getNetworkCandidates();
+  const dexes = getDexCandidates();
+  let lastError = null;
+
+  for (const network of networks) {
+    for (const dex of dexes) {
+      try {
+        const data = await get(pathBuilder(network, dex), params);
+        return {
+          ...data,
+          _meta: {
+            network,
+            dex,
+          },
+        };
+      } catch (error) {
+        lastError = error;
+        if (isNotFound(error)) {
+          continue;
+        }
+        throw error;
+      }
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+  throw new Error('No Gecko network/dex candidates available');
+}
+
 async function getPools(page = 1) {
-  return get(`/networks/${GECKO_NETWORK}/pools`, { page });
+  return getAcrossNetworks((network) => `/networks/${network}/pools`, { page });
 }
 
 async function getJainePools(page = 1) {
-  return get(`/networks/${GECKO_NETWORK}/dexes/${GECKO_JAINE_DEX}/pools`, { page });
+  return getAcrossNetworkDex((network, dex) => `/networks/${network}/dexes/${dex}/pools`, { page });
 }
 
 async function getToken(address) {
-  return get(`/networks/${GECKO_NETWORK}/tokens/${address}`);
+  return getAcrossNetworks((network) => `/networks/${network}/tokens/${address}`);
 }
 
 async function getPoolOhlcv(poolAddress) {
-  return get(`/networks/${GECKO_NETWORK}/pools/${poolAddress}/ohlcv/hour`);
+  return getAcrossNetworks((network) => `/networks/${network}/pools/${poolAddress}/ohlcv/hour`);
 }
 
 module.exports = {

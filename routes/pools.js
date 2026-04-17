@@ -59,7 +59,7 @@ router.get('/', async (_req, res) => {
     const pools = (data?.data || []).map(parsePool);
 
     return res.json({
-      network: 'zero-gravity',
+      network: data?._meta?.network || 'unknown',
       count: pools.length,
       pools,
     });
@@ -82,7 +82,8 @@ router.get('/jaine', async (_req, res) => {
       .sort((a, b) => b.tvlUsd - a.tvlUsd);
 
     return res.json({
-      dex: 'jaine',
+      network: data?._meta?.network || 'unknown',
+      dex: data?._meta?.dex || 'unknown',
       count: pools.length,
       pools,
     });

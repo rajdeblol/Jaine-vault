@@ -8,6 +8,7 @@ const positionsRoute = require('./routes/positions');
 const poolsRoute = require('./routes/pools');
 const tokenRoute = require('./routes/token');
 const ilRoute = require('./routes/il');
+const aiRoute = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ app.use('/positions', positionsRoute);
 app.use('/pools', poolsRoute);
 app.use('/token', tokenRoute);
 app.use('/il-calculator', ilRoute);
+app.use('/ai', aiRoute);
 
 app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
