@@ -524,6 +524,9 @@
         renderAiList('ai-opportunities', strategy.opportunities);
         document.getElementById('ai-meta').textContent =
           `Source: ${data.aiEnabled ? 'AI model output' : 'rule-based fallback'} | Confidence: ${strategy.confidence ?? 'n/a'} | Network: ${data.context?.network?.geckoNetwork || 'unknown'}`;
+        if (data.aiFallbackReason) {
+          document.getElementById('ai-meta').textContent += ` | Note: ${data.aiFallbackReason}`;
+        }
 
         showToast('AI strategy ready', data.aiEnabled ? 'Generated with configured AI model.' : 'Generated using fallback rules.');
       } catch (err) {

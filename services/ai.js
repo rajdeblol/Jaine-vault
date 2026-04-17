@@ -122,10 +122,27 @@ async function generateStrategy({ context, userRequest }) {
     }
   }
 
-  const response = await axios.post(cfg.url, body, {
-    headers,
-    timeout: 20_000,
-  });
+  async function requestOnce() {
+    return axios.post(cfg.url, body, {
+      headers,
+      timeout: 20_000,
+    });
+  }
+
+  let response;
+  try {
+    response = await requestOnce();
+  } catch (error) {
+    const status = Number(error?.response?.status || 0);
+    if (status === 429) {
+      const retryAfterHeader = Number(error?.response?.headers?.['retry-after'] || 0);
+      const retryMs = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0 ? retryAfterHeader * 1000 : 1200;
+      await new Promise((resolve) => setTimeout(resolve, retryMs));
+      response = await requestOnce();
+    } else {
+      throw error;
+    }
+  }
 
   const text = normalizeAiText(response.data);
 

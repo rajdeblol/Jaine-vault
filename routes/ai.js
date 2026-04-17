@@ -207,16 +207,29 @@ router.post('/agent/strategy', async (req, res) => {
       wallet: walletSnapshot,
     };
 
-    const aiResult = await generateStrategy({
-      context,
-      userRequest,
-    });
+    let aiResult = null;
+    let aiFallbackReason = null;
+
+    try {
+      aiResult = await generateStrategy({
+        context,
+        userRequest,
+      });
+    } catch (error) {
+      const status = Number(error?.response?.status || 0);
+      if (status === 429) {
+        aiFallbackReason = 'AI provider rate-limited (429). Returned fallback strategy.';
+      } else {
+        aiFallbackReason = `AI provider error${status ? ` (${status})` : ''}. Returned fallback strategy.`;
+      }
+    }
 
     const strategy = aiResult || ruleBasedStrategy({ market, jaine, wallet: walletSnapshot, riskProfile: normalizedRiskProfile });
 
     return res.json({
       ok: true,
       aiEnabled: Boolean(aiResult),
+      aiFallbackReason,
       context,
       strategy,
     });
